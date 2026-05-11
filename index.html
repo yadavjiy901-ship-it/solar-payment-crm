@@ -74,6 +74,9 @@ font-weight:700;
 color:white;
 cursor:pointer;
 margin-top:10px;
+text-decoration:none;
+display:block;
+text-align:center;
 }
 
 .green{background:#16a34a;}
@@ -187,8 +190,13 @@ margin-top:14px;
 
 </div>
 
+<input
+type="text"
+id="sendNumber"
+placeholder="📱 Enter Mobile Number With Country Code">
+
 <button class="btn purple" onclick="sendAllVendor()">
-📤 Send All Customers To Vendor
+📤 Send Data Any Number
 </button>
 
 <button class="btn orange" onclick="downloadData()">
@@ -200,15 +208,15 @@ margin-top:14px;
 </button>
 
 <input
- type="file"
- id="restoreFile"
- accept=".json"
- style="display:none"
- onchange="restoreData(event)">
+type="file"
+id="restoreFile"
+accept=".json"
+style="display:none"
+onchange="restoreData(event)">
 
 <button
- class="btn blue"
- onclick="document.getElementById('restoreFile').click()">
+class="btn blue"
+onclick="document.getElementById('restoreFile').click()">
 📂 Restore Backup
 </button>
 
@@ -225,8 +233,6 @@ margin-top:14px;
 let vendorCustomers = [];
 let paymentCustomers = [];
 let currentPage='vendor';
-
-const vendorNumber='919999999999';
 
 function saveData(){
 
@@ -288,6 +294,14 @@ renderCustomers();
 
 alert('✅ Customer Saved');
 
+document.getElementById('name').value='';
+document.getElementById('mobile').value='';
+document.getElementById('village').value='';
+document.getElementById('consumer').value='';
+document.getElementById('aadhar').value='';
+document.getElementById('pan').value='';
+document.getElementById('bank').value='';
+
 }
 
 function changePage(page){
@@ -310,14 +324,11 @@ if(currentPage==='payment'){
 data=paymentCustomers;
 }
 
-
 document.getElementById('vendorCount').innerText=
 vendorCustomers.length;
 
-
 document.getElementById('paymentCount').innerText=
 paymentCustomers.length;
-
 
 data.forEach((customer,index)=>{
 
@@ -336,7 +347,7 @@ onclick="paymentReceived(${index})">
 <button
 class="btn blue"
 onclick="sendSingleVendor(${index})">
-📤 Send To Vendor
+📤 Send Single Customer
 </button>
 
 `;
@@ -386,18 +397,45 @@ ${buttons}
 
 function sendSingleVendor(index){
 
+const number =
+document.getElementById('sendNumber').value.trim();
+
+if(number===''){
+alert('Enter Mobile Number First');
+return;
+}
+
 const c=vendorCustomers[index];
 
-const text=`☀️ NEW SOLAR CUSTOMER\n\n👤 ${c.name}\n📱 ${c.mobile}\n🏡 ${c.village}\n🔢 ${c.consumer}\n\n🪪 Aadhaar: ${c.aadhar}\n🆔 PAN: ${c.pan}\n🏦 Bank: ${c.bank}\n🏷️ ${c.company}\n🤝 ${c.source}`;
+const text=`☀️ NEW SOLAR CUSTOMER
+
+👤 ${c.name}
+📱 ${c.mobile}
+🏡 ${c.village}
+🔢 ${c.consumer}
+
+🪪 Aadhaar: ${c.aadhar}
+🆔 PAN: ${c.pan}
+🏦 Bank: ${c.bank}
+🏷️ ${c.company}
+🤝 ${c.source}`;
 
 window.open(
-`https://wa.me/${vendorNumber}?text=${encodeURIComponent(text)}`,
+`https://wa.me/${number}?text=${encodeURIComponent(text)}`,
 '_blank'
 );
 
 }
 
 function sendAllVendor(){
+
+const number =
+document.getElementById('sendNumber').value.trim();
+
+if(number===''){
+alert('Enter Mobile Number');
+return;
+}
 
 if(vendorCustomers.length===0){
 alert('No Customers');
@@ -415,13 +453,16 @@ text += `${i+1}️⃣ ${c.name}\n📱 ${c.mobile}\n🔢 ${c.consumer}\n🏷️ $
 text += 'Dhakad Agro Solar Solution';
 
 window.open(
-`https://wa.me/${vendorNumber}?text=${encodeURIComponent(text)}`,
+`https://wa.me/${number}?text=${encodeURIComponent(text)}`,
 '_blank'
 );
 
 }
 
 function paymentReceived(index){
+
+const number =
+document.getElementById('sendNumber').value.trim();
 
 const c=vendorCustomers[index];
 
@@ -430,12 +471,22 @@ const pending=vendorCustomers
 .map(x=>x.name)
 .join(', ');
 
-const msg=`✅ Payment Received Update\n\nCustomer: ${c.name}\n\nIs customer ka payment receive ho gaya hai.\n\nPending Customers: ${pending}`;
+if(number!==''){
+
+const msg=`✅ Payment Received Update
+
+Customer: ${c.name}
+
+Is customer ka payment receive ho gaya hai.
+
+Pending Customers: ${pending}`;
 
 window.open(
-`https://wa.me/${vendorNumber}?text=${encodeURIComponent(msg)}`,
+`https://wa.me/${number}?text=${encodeURIComponent(msg)}`,
 '_blank'
 );
+
+}
 
 paymentCustomers.push(c);
 vendorCustomers.splice(index,1);
@@ -560,4 +611,4 @@ renderCustomers();
 </script>
 
 </body>
-  </html>
+</html>
