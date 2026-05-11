@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dhakad Solar Payment CRM</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+-webkit-tap-highlight-color:transparent;
+}
+
+body{
+background:#eef2f7;
+padding:16px;
+}
+
+header{
+background:linear-gradient(135deg,#15803d,#16a34a);
+padding:30px 20px;
+text-align:center;
+color:white;
+border-radius:28px;
+margin-bottom:20px;
+box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+header h1{
+font-size:32px;
+margin-bottom:8px;
+}
+
+header p{
+font-size:17px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:24px;
+margin-bottom:18px;
+box-shadow:0 5px 18px rgba(0,0,0,0.08);
+}
+
+input,
+select{
+width:100%;
+padding:16px;
+border-radius:16px;
+border:1px solid #d1d5db;
+font-size:16px;
+margin-bottom:14px;
+outline:none;
+}
+
+.btn{
+width:100%;
+padding:16px;
+border:none;
+border-radius:18px;
+font-size:18px;
+font-weight:700;
+color:white;
+cursor:pointer;
+margin-top:10px;
+}
+
+.green{background:#16a34a;}
+.blue{background:#2563eb;}
+.orange{background:#f59e0b;}
+.red{background:#dc2626;}
+.black{background:#111827;}
+.purple{background:#7c3aed;}
+
+.stats{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-bottom:18px;
+}
+
+.stat-box{
+background:white;
+padding:18px;
+border-radius:22px;
+text-align:center;
+font-size:18px;
+font-weight:700;
+box-shadow:0 5px 18px rgba(0,0,0,0.08);
+cursor:pointer;
+}
+
+.customer{
+background:white;
+padding:22px;
+border-radius:24px;
+margin-bottom:16px;
+box-shadow:0 5px 18px rgba(0,0,0,0.08);
+}
+
+.customer h3{
+font-size:24px;
+margin-bottom:12px;
+}
+
+.info{
+font-size:16px;
+margin-bottom:8px;
+word-break:break-word;
+}
+
+.buttons{
+display:grid;
+gap:10px;
+margin-top:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h1>☀️ Dhakad Solar CRM</h1>
+<p>Vendor & Payment Tracking System</p>
+</header>
+
+<div class="card">
+
+<input type="text" id="name" placeholder="👤 Customer Name">
+
+<input type="text" id="mobile" placeholder="📱 Mobile Number">
+
+<input type="text" id="village" placeholder="🏡 Village">
+
+<input type="text" id="consumer" placeholder="🔢 Consumer Number">
+
+<input type="text" id="aadhar" placeholder="🪪 Aadhaar Number">
+
+<input type="text" id="pan" placeholder="🆔 PAN Number">
+
+<input type="text" id="bank" placeholder="🏦 Bank Account Number">
+
+<select id="company">
+<option value="Tata Solar">Tata Solar</option>
+<option value="Adani Solar">Adani Solar</option>
+<option value="Waaree Solar">Waaree Solar</option>
+<option value="Havells Solar">Havells Solar</option>
+</select>
+
+<select id="source">
+<option value="Self Lead">Self Lead</option>
+<option value="Partner Lead">Partner Lead</option>
+</select>
+
+<button class="btn green" onclick="saveCustomer()">
+➕ Save Customer
+</button>
+
+</div>
+
+<div class="stats">
+
+<div class="stat-box" onclick="changePage('vendor')">
+📄 Vendor
+<br><br>
+<span id="vendorCount">0</span>
+</div>
+
+<div class="stat-box" onclick="changePage('payment')">
+💰 Payment Done
+<br><br>
+<span id="paymentCount">0</span>
+</div>
+
+</div>
+
+<button class="btn purple" onclick="sendAllVendor()">
+📤 Send All Customers To Vendor
+</button>
+
+<button class="btn orange" onclick="downloadData()">
+📥 Download Current Data
+</button>
+
+<button class="btn black" onclick="backupData()">
+💾 Backup Full Data
+</button>
+
+<input
+ type="file"
+ id="restoreFile"
+ accept=".json"
+ style="display:none"
+ onchange="restoreData(event)">
+
+<button
+ class="btn blue"
+ onclick="document.getElementById('restoreFile').click()">
+📂 Restore Backup
+</button>
+
+<button class="btn red" onclick="clearData()">
+🗑 Clear Current Page Data
+</button>
+
+<br><br>
+
+<div id="customerList"></div>
+
+<script>
+
+let vendorCustomers = [];
+let paymentCustomers = [];
+let currentPage='vendor';
+
+const vendorNumber='919999999999';
+
+function saveData(){
+
+localStorage.setItem(
+'vendorCustomers',
+JSON.stringify(vendorCustomers)
+);
+
+localStorage.setItem(
+'paymentCustomers',
+JSON.stringify(paymentCustomers)
+);
+
+}
+
+function loadData(){
+
+vendorCustomers =
+JSON.parse(
+localStorage.getItem('vendorCustomers')
+) || [];
+
+paymentCustomers =
+JSON.parse(
+localStorage.getItem('paymentCustomers')
+) || [];
+
+renderCustomers();
+
+}
+
+window.onload=loadData;
+
+function saveCustomer(){
+
+const customer={
+
+name:document.getElementById('name').value,
+mobile:document.getElementById('mobile').value,
+village:document.getElementById('village').value,
+consumer:document.getElementById('consumer').value,
+aadhar:document.getElementById('aadhar').value,
+pan:document.getElementById('pan').value,
+bank:document.getElementById('bank').value,
+company:document.getElementById('company').value,
+source:document.getElementById('source').value
+
+};
+
+if(customer.name===''){
+alert('Enter Customer Name');
+return;
+}
+
+vendorCustomers.push(customer);
+
+saveData();
+renderCustomers();
+
+alert('✅ Customer Saved');
+
+}
+
+function changePage(page){
+currentPage=page;
+renderCustomers();
+}
+
+function renderCustomers(){
+
+const list=document.getElementById('customerList');
+list.innerHTML='';
+
+let data=[];
+
+if(currentPage==='vendor'){
+data=vendorCustomers;
+}
+
+if(currentPage==='payment'){
+data=paymentCustomers;
+}
+
+
+document.getElementById('vendorCount').innerText=
+vendorCustomers.length;
+
+
+document.getElementById('paymentCount').innerText=
+paymentCustomers.length;
+
+
+data.forEach((customer,index)=>{
+
+let buttons='';
+
+if(currentPage==='vendor'){
+
+buttons=`
+
+<button
+class="btn green"
+onclick="paymentReceived(${index})">
+💰 Payment Received
+</button>
+
+<button
+class="btn blue"
+onclick="sendSingleVendor(${index})">
+📤 Send To Vendor
+</button>
+
+`;
+
+}
+
+if(currentPage==='payment'){
+
+buttons=`
+
+<a
+href="tel:${customer.mobile}"
+class="btn black">
+📞 Call Customer
+</a>
+
+`;
+
+}
+
+list.innerHTML += `
+
+<div class="customer">
+
+<h3>👤 ${customer.name}</h3>
+
+<div class="info">📱 ${customer.mobile}</div>
+<div class="info">🏡 ${customer.village}</div>
+<div class="info">🔢 ${customer.consumer}</div>
+<div class="info">🪪 Aadhaar: ${customer.aadhar}</div>
+<div class="info">🆔 PAN: ${customer.pan}</div>
+<div class="info">🏦 Bank: ${customer.bank}</div>
+<div class="info">🏷️ ${customer.company}</div>
+<div class="info">🤝 ${customer.source}</div>
+
+<div class="buttons">
+${buttons}
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+function sendSingleVendor(index){
+
+const c=vendorCustomers[index];
+
+const text=`☀️ NEW SOLAR CUSTOMER\n\n👤 ${c.name}\n📱 ${c.mobile}\n🏡 ${c.village}\n🔢 ${c.consumer}\n\n🪪 Aadhaar: ${c.aadhar}\n🆔 PAN: ${c.pan}\n🏦 Bank: ${c.bank}\n🏷️ ${c.company}\n🤝 ${c.source}`;
+
+window.open(
+`https://wa.me/${vendorNumber}?text=${encodeURIComponent(text)}`,
+'_blank'
+);
+
+}
+
+function sendAllVendor(){
+
+if(vendorCustomers.length===0){
+alert('No Customers');
+return;
+}
+
+let text='☀️ SOLAR REGISTRATION CUSTOMERS\n\n';
+
+vendorCustomers.forEach((c,i)=>{
+
+text += `${i+1}️⃣ ${c.name}\n📱 ${c.mobile}\n🔢 ${c.consumer}\n🏷️ ${c.company}\n\n`;
+
+});
+
+text += 'Dhakad Agro Solar Solution';
+
+window.open(
+`https://wa.me/${vendorNumber}?text=${encodeURIComponent(text)}`,
+'_blank'
+);
+
+}
+
+function paymentReceived(index){
+
+const c=vendorCustomers[index];
+
+const pending=vendorCustomers
+.filter((_,i)=>i!==index)
+.map(x=>x.name)
+.join(', ');
+
+const msg=`✅ Payment Received Update\n\nCustomer: ${c.name}\n\nIs customer ka payment receive ho gaya hai.\n\nPending Customers: ${pending}`;
+
+window.open(
+`https://wa.me/${vendorNumber}?text=${encodeURIComponent(msg)}`,
+'_blank'
+);
+
+paymentCustomers.push(c);
+vendorCustomers.splice(index,1);
+
+saveData();
+renderCustomers();
+
+}
+
+function downloadData(){
+
+let data=[];
+
+if(currentPage==='vendor'){
+data=vendorCustomers;
+}
+
+if(currentPage==='payment'){
+data=paymentCustomers;
+}
+
+if(data.length===0){
+alert('No Data');
+return;
+}
+
+const worksheet=
+XLSX.utils.json_to_sheet(data);
+
+const workbook=
+XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(
+workbook,
+worksheet,
+currentPage
+);
+
+XLSX.writeFile(
+workbook,
+`${currentPage}_data.xlsx`
+);
+
+}
+
+function backupData(){
+
+const allData={
+vendorCustomers,
+paymentCustomers
+};
+
+const blob=new Blob(
+[JSON.stringify(allData,null,2)],
+{type:'application/json'}
+);
+
+const a=document.createElement('a');
+
+a.href=URL.createObjectURL(blob);
+a.download='solar_payment_backup.json';
+a.click();
+
+}
+
+function restoreData(event){
+
+const file=event.target.files[0];
+
+if(!file){
+return;
+}
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+const data=JSON.parse(e.target.result);
+
+vendorCustomers=data.vendorCustomers || [];
+paymentCustomers=data.paymentCustomers || [];
+
+saveData();
+renderCustomers();
+
+alert('✅ Backup Restored');
+
+};
+
+reader.readAsText(file);
+
+}
+
+function clearData(){
+
+if(currentPage==='vendor'){
+
+if(confirm('Delete Vendor Data?')){
+
+vendorCustomers=[];
+saveData();
+renderCustomers();
+
+}
+
+}
+
+if(currentPage==='payment'){
+
+if(confirm('Delete Payment Data?')){
+
+paymentCustomers=[];
+saveData();
+renderCustomers();
+
+}
+
+}
+
+}
+
+</script>
+
+</body>
+  </html>
